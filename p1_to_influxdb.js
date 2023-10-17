@@ -56,30 +56,34 @@ mqttClient.on('reconnect', () => {
 mqttClient.on('message', (topic, message) => {
   console.log(`Received message from topic ${topic}: ${message.toString()}`);
 
-  // Feldolgozzuk az MQTT-ből érkező üzenetet
-  const data = message.toString().split(',');
-  const fields = {};
-  data.forEach(pair => {
+  const mqttData = message.toString();
+  const dataPairs = mqttData.split(' ');
+
+  // Az első elem (pl. "electricity") a mérési pont neve lesz
+  const measurementName = dataPairs.shift();
+
+  const point = new Point(measurementName).tag('topic', topic);
+
+  dataPairs.forEach(pair => {
     const [key, value] = pair.split('=');
-    fields[key] = parseFloat(value);
+    if (value.endsWith('i')) {
+      point.intField(key, parseInt(value.slice(0, -1)));
+    } else if (value.includes('.')) {
+      point.floatField(key, parseFloat(value));
+    } else {
+      point.stringField(key, value);
+    }
   });
-
-  const point = new Point('mqtt_data')
-    .tag('topic', topic);
-
-  // Hozzáadjuk az egyes mezőket a pontokhoz
-  for (const [key, value] of Object.entries(fields)) {
-    point.floatField(key, value);
-  }
 
   writeApi.writePoint(point);
-  
+
   writeApi.flush().then(() => {
-      console.log(`Successfully written to InfluxDB: ${message.toString()}`);
+    console.log(`Successfully written to InfluxDB: ${message.toString()}`);
   }).catch(err => {
-      console.error(`Error writing to InfluxDB: ${err}`);
+    console.error(`Error writing to InfluxDB: ${err}`);
   });
 });
+
 
 
 
