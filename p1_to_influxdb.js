@@ -13,12 +13,17 @@ const bucket = 'efelho';
 const client = new InfluxDB({ url: influxdb_url, token: token });
 const writeApi = client.getWriteApi(org, bucket);
 
-const mqttClient = mqtt.connect('mqtt://722577b8ac4a4176ac5460ef90db0940.s2.eu.hivemq.cloud', {
+const fs = require('fs');
+const hivemqCert = fs.readFileSync('./hivemq.crt'); 
+
+const mqttClient = mqtt.connect('mqtts://722577b8ac4a4176ac5460ef90db0940.s2.eu.hivemq.cloud', {
   clientId: "MKR1010Client-" + Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase(),
   username: "szekelyg",
   password: "Sevenof9",
-  connectTimeout: 5000
+  connectTimeout: 5000,
+  ca: hivemqCert,
 });
+
 
 mqttClient.on('connect', () => {
   console.log('Connected to MQTT broker');
