@@ -1,6 +1,6 @@
 const express = require('express');
 const fs = require('fs');
-const mqtt = require('mqtt
+const mqtt = require('mqtt');
 const path = require('path');
 
 const app = express();
