@@ -13,14 +13,20 @@ const bucket = 'efelho';
 const client = new InfluxDB({ url: influxdb_url, token: token });
 const writeApi = client.getWriteApi(org, bucket);
 
-const mqttClient = mqtt.connect('mqtt://722577b8ac4a4176ac5460ef90db0940.s2.eu.hivemq.cloud',"szekelyg","Sevenof9");
+const mqttClient = mqtt.connect('mqtt://722577b8ac4a4176ac5460ef90db0940.s2.eu.hivemq.cloud', "szekelyg", "Sevenof9");
 
 mqttClient.on('connect', () => {
   mqttClient.subscribe('SmartMeter/P1', (err) => {
     if (!err) {
       console.log("Subscribed to SmartMeter/P1 topic");
+    } else {
+      console.error("Error subscribing to SmartMeter/P1 topic:", err);
     }
   });
+});
+
+mqttClient.on('error', (err) => {
+  console.error("MQTT Error:", err);
 });
 
 mqttClient.on('message', (topic, message) => {
@@ -30,8 +36,13 @@ mqttClient.on('message', (topic, message) => {
     .tag('topic', topic)
     .stringField('payload', message.toString());
 
-  writeApi.writePoint(point);
-  writeApi.flush();
+  writeApi.writePoint(point).catch(err => {
+    console.error("Error writing to InfluxDB:", err);
+  });
+
+  writeApi.flush().catch(err => {
+    console.error("Error flushing data to InfluxDB:", err);
+  });
 });
 
 app.get('/', (req, res) => {
