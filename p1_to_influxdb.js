@@ -14,7 +14,7 @@ const client = new InfluxDB({ url: influxdb_url, token: token });
 const writeApi = client.getWriteApi(org, bucket);
 
 const mqttOptions = {
-  clientId: "MKR1010Client-" + String(random(0xffff), HEX),
+  clientId: "MKR1010Client-" + Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase(),
   clean: true,
   connectTimeout: 4000,
   username: "szekelyg",
