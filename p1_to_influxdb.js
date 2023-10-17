@@ -1,3 +1,7 @@
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
 const mqtt = require('mqtt');
 const { InfluxDB, Point } = require('@influxdata/influxdb-client');
 
@@ -28,4 +32,12 @@ mqttClient.on('message', (topic, message) => {
 
   writeApi.writePoint(point);
   writeApi.flush();
+});
+
+app.get('/', (req, res) => {
+  res.send('MQTT-InfluxDB bridge is running');
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
