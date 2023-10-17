@@ -26,6 +26,7 @@ const mqttClient = mqtt.connect('mqtts://722577b8ac4a4176ac5460ef90db0940.s2.eu.
   password: "Sevenof9",
   connectTimeout: 5000,
   ca: hivemqCert,
+  rejectUnauthorized: false
 });
 
 
