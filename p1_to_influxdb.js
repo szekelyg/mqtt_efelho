@@ -53,6 +53,18 @@ mqttClient.on('reconnect', () => {
   console.warn("Reconnecting to MQTT broker...");
 });
 
+mqttClient.on('message', () => {
+  console.log(`Received message from topic ${topic}: ${message.toString()}`);
+});
+
+writeApi.writePoint(point);
+writeApi.flush().then(() => {
+    console.log(`Successfully written to InfluxDB: ${message.toString()}`);
+}).catch(err => {
+    console.error(`Error writing to InfluxDB: ${err}`);
+});
+
+
 setTimeout(() => {
   if (!mqttClient.connected) {
     console.error("Failed to connect to MQTT broker after 5 seconds");
