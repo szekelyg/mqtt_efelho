@@ -12,7 +12,7 @@ const { InfluxDB, Point } = require('@influxdata/influxdb-client');
 const influxdb_url = 'https://eu-central-1-1.aws.cloud2.influxdata.com';
 const token = '7VfH77yCJenqjk-zOT24Bz-nMFrePCAT6Lez8NNUIhO7DB0HOzsWxgXnvgmELe-4s02NANjprUMqSC_kX0bORA==';
 const org = 'b08ba55f6db726a3';
-const bucket = 'efelho';
+const bucket = 'p1_data';
 
 const client = new InfluxDB({ url: influxdb_url, token: token });
 const writeApi = client.getWriteApi(org, bucket);
