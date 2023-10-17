@@ -56,9 +56,21 @@ mqttClient.on('reconnect', () => {
 mqttClient.on('message', (topic, message) => {
   console.log(`Received message from topic ${topic}: ${message.toString()}`);
 
+  // Feldolgozzuk az MQTT-ből érkező üzenetet
+  const data = message.toString().split(',');
+  const fields = {};
+  data.forEach(pair => {
+    const [key, value] = pair.split('=');
+    fields[key] = parseFloat(value);
+  });
+
   const point = new Point('mqtt_data')
-    .tag('topic', topic)
-    .stringField('payload', message.toString());
+    .tag('topic', topic);
+
+  // Hozzáadjuk az egyes mezőket a pontokhoz
+  for (const [key, value] of Object.entries(fields)) {
+    point.floatField(key, value);
+  }
 
   writeApi.writePoint(point);
   
@@ -68,6 +80,7 @@ mqttClient.on('message', (topic, message) => {
       console.error(`Error writing to InfluxDB: ${err}`);
   });
 });
+
 
 
 
