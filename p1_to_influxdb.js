@@ -53,16 +53,22 @@ mqttClient.on('reconnect', () => {
   console.warn("Reconnecting to MQTT broker...");
 });
 
-mqttClient.on('message', () => {
+mqttClient.on('message', (topic, message) => {
   console.log(`Received message from topic ${topic}: ${message.toString()}`);
+
+  const point = new Point('mqtt_data')
+    .tag('topic', topic)
+    .stringField('payload', message.toString());
+
+  writeApi.writePoint(point);
+  
+  writeApi.flush().then(() => {
+      console.log(`Successfully written to InfluxDB: ${message.toString()}`);
+  }).catch(err => {
+      console.error(`Error writing to InfluxDB: ${err}`);
+  });
 });
 
-writeApi.writePoint(point);
-writeApi.flush().then(() => {
-    console.log(`Successfully written to InfluxDB: ${message.toString()}`);
-}).catch(err => {
-    console.error(`Error writing to InfluxDB: ${err}`);
-});
 
 
 setTimeout(() => {
