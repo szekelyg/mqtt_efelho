@@ -1,8 +1,12 @@
 const express = require('express');
+const fs = require('fs');
+const mqtt = require('mqtt
+const path = require('path');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const mqtt = require('mqtt');
+
 const { InfluxDB, Point } = require('@influxdata/influxdb-client');
 
 const influxdb_url = 'https://eu-central-1-1.aws.cloud2.influxdata.com';
@@ -13,7 +17,7 @@ const bucket = 'efelho';
 const client = new InfluxDB({ url: influxdb_url, token: token });
 const writeApi = client.getWriteApi(org, bucket);
 
-const fs = require('fs');
+
 const hivemqCert = fs.readFileSync('./hivemq.crt'); 
 
 const mqttClient = mqtt.connect('mqtts://722577b8ac4a4176ac5460ef90db0940.s2.eu.hivemq.cloud', {
