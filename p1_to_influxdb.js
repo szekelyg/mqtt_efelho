@@ -13,17 +13,28 @@ const bucket = 'efelho';
 const client = new InfluxDB({ url: influxdb_url, token: token });
 const writeApi = client.getWriteApi(org, bucket);
 
-const mqttClient = mqtt.connect('mqtt://722577b8ac4a4176ac5460ef90db0940.s2.eu.hivemq.cloud', "szekelyg", "Sevenof9");
+const mqttOptions = {
+  clientId: "MKR1010Client-" + String(random(0xffff), HEX),
+  clean: true,
+  connectTimeout: 4000,
+  username: "szekelyg",
+  password: "Sevenof9",
+  reconnectPeriod: 1000
+};
+
+const mqttClient = mqtt.connect('mqtt://722577b8ac4a4176ac5460ef90db0940.s2.eu.hivemq.cloud', mqttOptions);
 
 mqttClient.on('connect', () => {
+  console.log('Connected to MQTT broker');
   mqttClient.subscribe('SmartMeter/P1', (err) => {
     if (!err) {
       console.log("Subscribed to SmartMeter/P1 topic");
     } else {
-      console.error("Error subscribing to SmartMeter/P1 topic:", err);
+      console.error("Failed to subscribe to SmartMeter/P1 topic:", err);
     }
   });
 });
+
 
 mqttClient.on('error', (err) => {
   console.error("MQTT Error:", err);
