@@ -57,7 +57,7 @@ mqttClient.on('message', (topic, message) => {
   console.log(`Received message from topic ${topic}: ${message.toString()}`);
 
   const mqttData = message.toString();
-  const dataPairs = mqttData.split(' ');
+  const dataPairs = mqttData.split(',');
 
   // Az első elem (pl. "electricity") a mérési pont neve lesz
   const measurementName = dataPairs.shift();
