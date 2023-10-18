@@ -1,5 +1,6 @@
 
-let connectedDevices = [];
+let connectedDevices = {};
+
 
 const express = require('express');
 const fs = require('fs');
