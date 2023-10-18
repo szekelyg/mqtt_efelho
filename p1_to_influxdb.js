@@ -59,10 +59,14 @@ mqttClient.on('message', (topic, message) => {
   const mqttData = message.toString();
   const dataPairs = mqttData.split(',');
 
-  // Az első elem (pl. "electricity") a mérési pont neve lesz
+  // Az első elem (pl. "clientID=MKR1010Client-XYZ") a kliens ID lesz
+  const clientIDPair = dataPairs.shift();
+  const [clientIDKey, clientIDValue] = clientIDPair.split('=');
+
+  // A második elem (pl. "electricity") a mérési pont neve lesz
   const measurementName = dataPairs.shift();
 
-  const point = new Point(measurementName).tag('topic', topic);
+  const point = new Point(measurementName).tag('topic', topic).tag(clientIDKey, clientIDValue);
 
   dataPairs.forEach(pair => {
     const [key, value] = pair.split('=');
@@ -75,7 +79,9 @@ mqttClient.on('message', (topic, message) => {
     } else {
         point.stringField(key, value);
     }
+  });
 });
+
 
 
   writeApi.writePoint(point);
