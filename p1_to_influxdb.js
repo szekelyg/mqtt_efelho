@@ -1,3 +1,6 @@
+
+let connectedDevices = [];
+
 const express = require('express');
 const fs = require('fs');
 const mqtt = require('mqtt');
@@ -7,6 +10,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
+
+const OFFLINE_TIMEOUT = 60000; // 1 perc
 
 
 const { InfluxDB, Point } = require('@influxdata/influxdb-client');
@@ -81,9 +86,22 @@ mqttClient.on('message', (topic, message) => {
     } else {
         point.stringField(key, value);
     }
+
+    if (!connectedDevices.includes(clientIDValue)) {
+      connectedDevices.push(clientIDValue);
+    }
   });
 
-
+  const timestamp = Date.now();
+  if (!connectedDevices[clientIDValue]) {
+    connectedDevices[clientIDValue] = {
+      lastSeen: timestamp,
+      status: 'online'
+    };
+  } else {
+    connectedDevices[clientIDValue].lastSeen = timestamp;
+    connectedDevices[clientIDValue].status = 'online';
+  }
 
 
   writeApi.writePoint(point);
@@ -114,17 +132,33 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-app.post('/api/command', (req, res) => {
-  const command = req.body.command;
-  const clientId = req.body.clientId;
 
-  if (command && clientId) {
-    // Az MQTT üzenetek küldése az Arduino eszköznek 
-    const topic = 'InverterCommand/' + clientId;
-    mqttClient.publish(topic, command);
-    
-    res.status(200).send('Command sent successfully.');
+
+app.post('/api/send-command', (req, res) => {
+  const { device, command } = req.body;
+  if (connectedDevices.includes(device)) {
+    // Az alábbi kód küldi el a parancsot az eszköznek.
+    // Ez most csak egy egyszerű példa; a valós implementáció változhat.
+    mqttClient.publish(`InverterCommand/${device}`, command);
+
+    res.json({ success: true, message: 'Command sent successfully!' });
   } else {
-    res.status(400).send('Invalid command or clientId.');
+    res.status(404).json({ success: false, message: 'Device not found.' });
   }
 });
+
+
+app.get('/api/devices', (req, res) => {
+  res.json(connectedDevices);
+});
+
+
+
+setInterval(() => {
+  const now = Date.now();
+  for (const deviceID in connectedDevices) {
+    if (now - connectedDevices[deviceID].lastSeen > OFFLINE_TIMEOUT) {
+      connectedDevices[deviceID].status = 'offline';
+    }
+  }
+}, OFFLINE_TIMEOUT);
