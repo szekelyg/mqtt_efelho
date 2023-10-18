@@ -80,7 +80,7 @@ mqttClient.on('message', (topic, message) => {
         point.stringField(key, value);
     }
   });
-});
+
 
 
 
