@@ -9,7 +9,8 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-let connectedDevices = {};
+let devices = {};
+
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -93,15 +94,6 @@ mqttClient.on('message', (topic, message) => {
 
   });
 
-  
-  const timestamp = Date.now();
-  connectedDevices[clientIDValue] = {
-    lastSeen: timestamp,
-    status: 'online'
-  };
-
-
-
   writeApi.writePoint(point);
 
   writeApi.flush().then(() => {
@@ -109,10 +101,20 @@ mqttClient.on('message', (topic, message) => {
   }).catch(err => {
     console.error(`Error writing to InfluxDB: ${err}`);
   });
+
+  if (topic === "devices/status") {
+    let payload = JSON.parse(message.toString());
+    if (payload.status === "online") {
+      console.log(`Device ${payload.clientId} is now online.`);
+      devices[payload.clientId] = "online";
+    } else if (payload.status === "offline") {
+      console.log(`Device ${payload.clientId} is now offline.`);
+      devices[payload.clientId] = "offline";
+    }
+  }
+
+
 });
-
-
-
 
 
 setTimeout(() => {
@@ -146,10 +148,9 @@ app.post('/api/send-command', (req, res) => {
 });
 
 
-app.get('/api/devices', (req, res) => {
-  res.json(connectedDevices);
+app.get('/devices/status', (req, res) => {
+  res.json(devices);
 });
-
 
 
 setInterval(() => {
