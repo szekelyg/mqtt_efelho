@@ -1,22 +1,29 @@
 // public/script.js
 let selectedDevice = null;
 
+function deselectAllDevices() {
+    const deviceBoxes = document.querySelectorAll('.deviceBox');
+    deviceBoxes.forEach(box => box.classList.remove('selected'));
+}
+
 // Fetch the list of connected devices and update the UI
 function fetchDevices() {
     fetch('/devices/status')
         .then(response => response.json())
         .then(data => {
-            const deviceList = document.getElementById('deviceList');
-            deviceList.innerHTML = '';
+            const deviceContainer = document.getElementById('deviceContainer');
+            deviceContainer.innerHTML = '';
             for (const device in data) {
                 if (data[device].status === 'online') {
-                    const listItem = document.createElement('li');
-                    listItem.textContent = device;
-                    listItem.onclick = function() {
+                    const deviceBox = document.createElement('div');
+                    deviceBox.className = 'deviceBox';
+                    deviceBox.textContent = device;
+                    deviceBox.onclick = function() {
+                        deselectAllDevices();
                         selectedDevice = device;
-                        listItem.style.backgroundColor = 'lightblue';
+                        deviceBox.classList.add('selected');
                     };
-                    deviceList.appendChild(listItem);
+                    deviceContainer.appendChild(deviceBox);
                 }
             }
         });
@@ -51,5 +58,5 @@ function sendCommand() {
     }
 }
 
-// Fetch the devices every 1 seconds
-setInterval(fetchDevices, 1000);
+// Fetch the devices every 10 seconds
+setInterval(fetchDevices, 10000);
