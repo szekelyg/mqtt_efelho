@@ -1,5 +1,5 @@
-
-
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 
 const express = require('express');
@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 3000;
 
 let connectedDevices = {};
 
-app.use(express.json());
+
 
 const OFFLINE_TIMEOUT = 60000; // 1 perc
 
@@ -128,8 +128,6 @@ setTimeout(() => {
 }, 5000);
 
 
-app.use(express.static(path.join(__dirname, 'public')));
-
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -141,7 +139,7 @@ app.listen(PORT, () => {
 
 
 
-app.post('/api/send-command', (req, res) => {
+app.post('/api/command', (req, res) => {
   const { device, command } = req.body;
   if (connectedDevices.includes(device)) {
     // Az alábbi kód küldi el a parancsot az eszköznek.
