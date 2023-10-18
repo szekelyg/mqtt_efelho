@@ -6,6 +6,8 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(express.json());
+
 
 const { InfluxDB, Point } = require('@influxdata/influxdb-client');
 
@@ -110,4 +112,19 @@ app.get('/', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+});
+
+app.post('/api/command', (req, res) => {
+  const command = req.body.command;
+  const clientId = req.body.clientId;
+
+  if (command && clientId) {
+    // Az MQTT üzenetek küldése az Arduino eszköznek 
+    const topic = 'InverterCommand/' + clientId;
+    mqttClient.publish(topic, command);
+    
+    res.status(200).send('Command sent successfully.');
+  } else {
+    res.status(400).send('Invalid command or clientId.');
+  }
 });
