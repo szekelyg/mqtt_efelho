@@ -1,5 +1,4 @@
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+
 
 
 const express = require('express');
@@ -12,6 +11,8 @@ const PORT = process.env.PORT || 3000;
 
 let connectedDevices = {};
 
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 
 const OFFLINE_TIMEOUT = 60000; // 1 perc
