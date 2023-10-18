@@ -103,7 +103,9 @@ mqttClient.on('message', (topic, message) => {
   });
 
   if (topic === "devices/status") {
+    console.log("belep mert van csatlakozott eszköz");
     let payload = JSON.parse(message.toString());
+    console.log(payload.status);
     if (payload.status === "online") {
       console.log(`Device ${payload.clientId} is now online.`);
       devices[payload.clientId] = "online";
