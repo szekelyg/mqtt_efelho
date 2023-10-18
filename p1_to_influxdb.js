@@ -51,7 +51,16 @@ mqttClient.on('connect', () => {
       console.error("Failed to subscribe:", err);
     }
   });
+  mqttClient.subscribe('devices/status', (err) => {
+    if (!err) {
+      console.log("Subscribed to devices/status topic");
+    } else {
+      console.error("Failed to subscribe:", err);
+    }
+  });
 });
+
+
 
 mqttClient.on('error', (err) => {
   console.error("MQTT Error:", err);
@@ -106,13 +115,14 @@ mqttClient.on('message', (topic, message) => {
     console.log("belep mert van csatlakozott eszköz");
     let payload = JSON.parse(message.toString());
     console.log(payload.status);
-    if (payload.status === "online") {
-      console.log(`Device ${payload.clientId} is now online.`);
-      devices[payload.clientId] = "online";
-    } else if (payload.status === "offline") {
-      console.log(`Device ${payload.clientId} is now offline.`);
-      devices[payload.clientId] = "offline";
+    if (payload.status === "online" || payload.status === "offline") {
+      devices[payload.clientId] = {
+        status: payload.status,
+        lastSeen: Date.now()
+      };
+      console.log(`Device ${payload.clientId} is now ${payload.status}.`);
     }
+
   }
 });
 
@@ -155,8 +165,9 @@ app.get('/devices/status', (req, res) => {
 setInterval(() => {
   const now = Date.now();
   for (const deviceID in devices) {
-    if (devices[deviceID] === "online" && now - devices[deviceID].lastSeen > OFFLINE_TIMEOUT) {
-      devices[deviceID] = 'offline';
+    if (devices[deviceID].status === "online" && now - devices[deviceID].lastSeen > OFFLINE_TIMEOUT) {
+      devices[deviceID].status = 'offline';
+      console.log(`Device ${deviceID} is now offline due to inactivity.`);
     }
   }
 }, OFFLINE_TIMEOUT);
