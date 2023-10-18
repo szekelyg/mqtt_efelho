@@ -1,6 +1,6 @@
 #devicesBox {
-    width: 200px;
-    height: 500px;
+    width: 400px;
+    height: 200px;
     border: 1px solid black;
     overflow-y: auto; 
     margin-bottom: 20px;
