@@ -3,21 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/style.css">
-    <title>Arduino Command Center</title>
+    <title>Connected Devices</title>
 </head>
 <body>
-    <h1>Arduino Command Center</h1>
-    <h2>Connected Arduino Devices:</h2>
-    <div id="devicesBox"></div>
-        
-        <ul id="deviceList"></ul>
-    </div>
-    
-    <h2>Send Command:</h2>
-    <input type="text" id="commandInput" placeholder="Enter command...">
+    <h1>Connected Devices</h1>
+    <ul id="deviceList">
+        <!-- Az eszközök ide kerülnek -->
+    </ul>
+    <h2>Send Command</h2>
+    <label for="commandInput">Command:</label>
+    <input type="text" id="commandInput">
     <button onclick="sendCommand()">Send</button>
-
+    <p id="message"></p>
     <script src="script.js"></script>
 </body>
 </html>
