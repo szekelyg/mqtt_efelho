@@ -112,10 +112,7 @@ mqttClient.on('message', (topic, message) => {
       devices[payload.clientId] = "offline";
     }
   }
-
-
 });
-
 
 setTimeout(() => {
   if (!mqttClient.connected) {
@@ -134,30 +131,31 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-
-
+// Send a command to a specific device
 app.post('/api/send-command', (req, res) => {
   const { device, command } = req.body;
-  if (connectedDevices.hasOwnProperty(device)) {
+  
+  // Check if the device is online
+  if (devices[device] === "online") {
     mqttClient.publish(`InverterCommand/${device}`, command);
-
     res.json({ success: true, message: 'Command sent successfully!' });
   } else {
-    res.status(404).json({ success: false, message: 'Device not found.' });
+    res.status(404).json({ success: false, message: 'Device not found or offline.' });
   }
 });
 
-
+// Get the status of all devices
 app.get('/devices/status', (req, res) => {
   res.json(devices);
 });
 
-
+// Check if devices are still online
 setInterval(() => {
   const now = Date.now();
-  for (const deviceID in connectedDevices) {
-    if (now - connectedDevices[deviceID].lastSeen > OFFLINE_TIMEOUT) {
-      connectedDevices[deviceID].status = 'offline';
+  for (const deviceID in devices) {
+    if (devices[deviceID] === "online" && now - devices[deviceID].lastSeen > OFFLINE_TIMEOUT) {
+      devices[deviceID] = 'offline';
     }
   }
 }, OFFLINE_TIMEOUT);
+
