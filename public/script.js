@@ -40,3 +40,21 @@ function sendCommand() {
         }
     });
 }
+
+function refreshDeviceList(devices) {
+    const deviceList = document.getElementById('deviceList');
+    deviceList.innerHTML = ""; // clear the list
+    
+    if (devices.length === 0) {
+        const li = document.createElement('li');
+        li.textContent = "No devices connected.";
+        deviceList.appendChild(li);
+    } else {
+        devices.forEach(device => {
+            const li = document.createElement('li');
+            li.textContent = device;
+            deviceList.appendChild(li);
+        });
+    }
+}
+

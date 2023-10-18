@@ -1,0 +1,12 @@
+#devicesBox {
+    width: 200px;
+    height: 500px;
+    border: 1px solid black;
+    overflow-y: auto; 
+    margin-bottom: 20px;
+}
+
+#deviceList {
+    list-style-type: none;
+    padding: 0;
+}
