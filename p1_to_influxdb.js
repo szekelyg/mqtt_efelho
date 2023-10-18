@@ -91,21 +91,15 @@ mqttClient.on('message', (topic, message) => {
         point.stringField(key, value);
     }
 
-    if (!connectedDevices.includes(clientIDValue)) {
-      connectedDevices.push(clientIDValue);
-    }
   });
 
+  
   const timestamp = Date.now();
-  if (!connectedDevices[clientIDValue]) {
-    connectedDevices[clientIDValue] = {
-      lastSeen: timestamp,
-      status: 'online'
-    };
-  } else {
-    connectedDevices[clientIDValue].lastSeen = timestamp;
-    connectedDevices[clientIDValue].status = 'online';
-  }
+  connectedDevices[clientIDValue] = {
+    lastSeen: timestamp,
+    status: 'online'
+  };
+
 
 
   writeApi.writePoint(point);
@@ -142,9 +136,7 @@ app.listen(PORT, () => {
 
 app.post('/api/send-command', (req, res) => {
   const { device, command } = req.body;
-  if (connectedDevices.includes(device)) {
-    // Az alábbi kód küldi el a parancsot az eszköznek.
-    // Ez most csak egy egyszerű példa; a valós implementáció változhat.
+  if (connectedDevices.hasOwnProperty(device)) {
     mqttClient.publish(`InverterCommand/${device}`, command);
 
     res.json({ success: true, message: 'Command sent successfully!' });
