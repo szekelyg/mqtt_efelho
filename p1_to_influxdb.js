@@ -139,7 +139,7 @@ app.listen(PORT, () => {
 
 
 
-app.post('/api/command', (req, res) => {
+app.post('/api/send-command', (req, res) => {
   const { device, command } = req.body;
   if (connectedDevices.includes(device)) {
     // Az alábbi kód küldi el a parancsot az eszköznek.
