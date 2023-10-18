@@ -67,13 +67,16 @@ mqttClient.on('message', (topic, message) => {
   dataPairs.forEach(pair => {
     const [key, value] = pair.split('=');
     if (value.endsWith('i')) {
-      point.intField(key, parseInt(value.slice(0, -1)));
+        point.intField(key, parseInt(value.slice(0, -1)));
     } else if (value.includes('.')) {
-      point.floatField(key, parseFloat(value));
+        point.floatField(key, parseFloat(value));
+    } else if (value.endsWith('u')) {
+        point.uintField(key, value.slice(0, -1));
     } else {
-      point.stringField(key, value);
+        point.stringField(key, value);
     }
-  });
+});
+
 
   writeApi.writePoint(point);
 
