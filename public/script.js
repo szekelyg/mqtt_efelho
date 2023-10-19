@@ -8,47 +8,42 @@ function deselectAllDevices() {
     deviceBoxes.forEach(box => box.classList.remove('selected'));
 }
 
-// Fetch the list of connected devices and update the UI
 function fetchDevices() {
     fetch('/devices/status')
         .then(response => response.json())
         .then(data => {
-            let hasOnlineDevice = false;   
-            const previousSelectedDevice = selectedDevice;
-
-            // Ellenőrizzük, hogy változott-e az eszközök állapota
-            if (JSON.stringify(data) !== JSON.stringify(previousDevices)) {
-                const deviceContainer = document.getElementById('deviceContainer');
-                deviceContainer.innerHTML = '';
-                for (const device in data) {
-                    if (data[device].status === 'online') {
-                        const deviceBox = document.createElement('div');
-                        deviceBox.className = 'deviceBox';
-                        deviceBox.textContent = device;
-                        deviceBox.onclick = function() {
-                            deselectAllDevices();
-                            selectedDevice = this.textContent;
-                            this.classList.add('selected');
-                        };
-                        deviceContainer.appendChild(deviceBox);
-
-                        // Ha ez az eszköz volt korábban kijelölve, újra kijelöljük
-                        if (device === selectedDevice) {
-                            deviceBox.classList.add('selected');
-                        }
-                    }
+            const deviceContainer = document.getElementById('deviceContainer');
+            deviceContainer.innerHTML = '';
+            for (const device in data) {
+                if (data[device].status === 'online') {
+                    const deviceBox = document.createElement('div');
+                    deviceBox.className = 'deviceBox';
+                    deviceBox.textContent = device;
+                    deviceBox.onmouseover = function() {
+                        this.style.backgroundColor = "lightgray";
+                    };
+                    deviceBox.onmouseout = function() {
+                        this.style.backgroundColor = "";
+                    };
+                    deviceBox.onclick = function() {
+                        deselectAllDevices();
+                        selectedDevice = this.textContent;
+                        this.style.backgroundColor = "lightblue";
+                        document.getElementById("selectedDeviceDisplay").innerText = `Selected Device: ${selectedDevice}`;
+                    };
+                    deviceContainer.appendChild(deviceBox);
                 }
-                previousDevices = data; // Frissítjük a korábbi eszközök állapotát
-            }
-            // Itt ellenőrizzük, hogy van-e online eszköz
-            const selectedDeviceElement = document.getElementById("selectedDevice");
-            if (hasOnlineDevice) {
-                selectedDeviceElement.style.display = "block";
-            } else {
-                selectedDeviceElement.style.display = "none";
             }
         });
 }
+
+function deselectAllDevices() {
+    const deviceBoxes = document.querySelectorAll('.deviceBox');
+    deviceBoxes.forEach(box => {
+        box.style.backgroundColor = "";
+    });
+}
+
 
 // Send a command to the selected device
 function sendCommand() {

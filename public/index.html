@@ -1,21 +1,34 @@
-<!-- public/index.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hu">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connected Devices</title>
+    <title>Eszközök Kezelése</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Connected Devices</h1>
-    <div id="deviceContainer"></div>
+    <header>
+        <h1>Eszközök Kezelése</h1>
+        <p>Üdvözöljük az Eszközök Kezelése oldalon! Itt megtekintheti az összes csatlakoztatott eszközt, kiválaszthatja a kívánt eszközt és elküldhet hozzá parancsokat.</p>
+    </header>
     
-    <p id="selectedDevice">Nincs kiválasztott eszköz</p>
-    <h2>Send Command</h2>
-    <input type="text" id="commandInput" placeholder="Enter command...">
-    <button onclick="sendCommand()">Send</button>
-    <p id="message"></p>
+    <section>
+        <h2>Csatlakoztatott Eszközök</h2>
+        <div id="deviceContainer"></div>
+    </section>
+
+    <section>
+        <h2>Kiválasztott Eszköz</h2>
+        <p id="selectedDeviceDisplay">Nincs kiválasztott eszköz</p>
+    </section>
+
+    <section>
+        <h2>Parancs Küldése</h2>
+        <input type="text" id="commandInput" placeholder="Parancs beírása...">
+        <button onclick="sendCommand()">Küldés</button>
+        <p id="message"></p>
+    </section>
+
     <script src="script.js"></script>
 </body>
 </html>
