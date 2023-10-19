@@ -16,8 +16,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-const OFFLINE_TIMEOUT = 60000; // 1 perc
-
+const OFFLINE_TIMEOUT = 300000; // 5 perc
 
 const { InfluxDB, Point } = require('@influxdata/influxdb-client');
 
@@ -86,6 +85,10 @@ mqttClient.on('message', (topic, message) => {
 
   // A második elem (pl. "electricity") a mérési pont neve lesz
   const measurementName = dataPairs.shift();
+  
+  if (devices[clientIDValue]) {
+    devices[clientIDValue].lastSeen = Date.now();
+  }
 
   const point = new Point(measurementName).tag('topic', topic).tag(clientIDKey, clientIDValue);
 
@@ -112,7 +115,6 @@ mqttClient.on('message', (topic, message) => {
   });
 
   if (topic === "devices/status") {
-    console.log("belep mert van csatlakozott eszköz");
     let payload = JSON.parse(message.toString());
     console.log(payload.status);
     if (payload.status === "online" || payload.status === "offline") {
