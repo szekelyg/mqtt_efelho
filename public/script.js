@@ -13,6 +13,7 @@ function fetchDevices() {
         .then(data => {
             const deviceContainer = document.getElementById('deviceContainer');
             deviceContainer.innerHTML = '';
+            let hasOnlineDevice = false;
             for (const device in data) {
                 if (data[device].status === 'online') {
                     const deviceBox = document.createElement('div');
