@@ -110,9 +110,7 @@ mqttClient.on('message', (topic, message) => {
         point.stringField(key, value);
     }
   });
-
   
-
   writeApi.writePoint(point);
 
   writeApi.flush().then(() => {

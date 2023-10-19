@@ -103,6 +103,6 @@ function selectDevice(deviceName) {
   
 
 // Fetch the devices every 10 seconds
-setInterval(fetchDevices, 10000);
+setInterval(fetchDevices, 1000);
 
 
