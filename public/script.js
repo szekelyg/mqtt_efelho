@@ -20,7 +20,7 @@ function fetchDevices() {
                     deviceBox.textContent = device;
                     deviceBox.onclick = function() {
                         deselectAllDevices();
-                        selectedDevice = device;
+                        selectedDevice = this.textContent; // Frissítjük a selectedDevice változót a kijelölt eszköz nevére
                         deviceBox.classList.add('selected');
                     };
                     deviceContainer.appendChild(deviceBox);
