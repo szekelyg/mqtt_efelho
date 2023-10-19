@@ -149,10 +149,14 @@ app.listen(PORT, () => {
 app.post('/api/send-command', (req, res) => {
   const { device, command } = req.body;
   
+  // Az üzenet formátuma: { "clientID": "MKR1010Client-xxx1", "command": "TURN_ON" }
+  const messagePayload = JSON.stringify({ clientID: device, command: command });
+
   // Check if the device is online
   if (devices[device] && devices[device].status === "online") {
-    mqttClient.publish(`InverterCommand/${device}`, command);
-    console.log("Send command on channel: " + `InverterCommand/${device}` + " COMMAND: " + command);
+    // Küldje el az üzenetet az INVERTERCOMMAND csatornára
+    mqttClient.publish(`InverterCommand`, messagePayload);
+    console.log("Send command on channel: InverterCommand, COMMAND: " + messagePayload);
 
     res.json({ success: true, message: 'Command sent successfully!' });
   } else {
