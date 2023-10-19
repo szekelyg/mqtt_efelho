@@ -27,6 +27,13 @@ function fetchDevices() {
                     deviceContainer.appendChild(deviceBox);
                 }
             }
+            // Itt ellenőrizzük, hogy van-e online eszköz
+            const selectedDeviceElement = document.getElementById("selectedDevice");
+            if (hasOnlineDevice) {
+                selectedDeviceElement.style.display = "block";
+            } else {
+                selectedDeviceElement.style.display = "none";
+            }
         });
 }
 
@@ -53,6 +60,10 @@ function sendCommand() {
                 message.textContent = data.message;
             }
             commandInput.value = '';
+            // Az üzenet eltüntetése 3 másodperc után
+            setTimeout(() => {
+                message.textContent = '';
+            }, 3000);
         });
     } else {
         message.textContent = 'Please select a device first.';

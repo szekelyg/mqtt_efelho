@@ -5,24 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connected Devices</title>
-    <style>
-        .deviceBox {
-            display: inline-block;
-            padding: 10px;
-            margin: 5px;
-            border: 1px solid black;
-            cursor: pointer;
-        }
-        .selected {
-            background-color: lightblue;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <h1>Connected Devices</h1>
     <div id="deviceContainer"></div>
     <h2>Selected Device</h2>
-        <p id="selectedDevice">Nincs kiválasztott eszköz</p>
+    <p id="selectedDevice">Nincs kiválasztott eszköz</p>
     <h2>Send Command</h2>
     <input type="text" id="commandInput" placeholder="Enter command...">
     <button onclick="sendCommand()">Send</button>
