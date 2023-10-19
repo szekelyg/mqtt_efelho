@@ -85,12 +85,19 @@ mqttClient.on('message', (topic, message) => {
 
   // A második elem (pl. "electricity") a mérési pont neve lesz
   const measurementName = dataPairs.shift();
+
+  // Az epoch idő fogadása
+  const epochPair = dataPairs.shift();
+  const [epochKey, epochValue] = epochPair.split('=');
+
   
   if (devices[clientIDValue]) {
     devices[clientIDValue].lastSeen = Date.now();
   }
 
   const point = new Point(measurementName).tag('topic', topic).tag(clientIDKey, clientIDValue);
+
+  point.intField(epochKey, parseInt(epochValue));
 
   dataPairs.forEach(pair => {
     const [key, value] = pair.split('=');
