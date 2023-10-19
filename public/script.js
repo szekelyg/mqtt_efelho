@@ -1,5 +1,7 @@
 // public/script.js
 let selectedDevice = null;
+let previousDevices = {};
+
 
 function deselectAllDevices() {
     const deviceBoxes = document.querySelectorAll('.deviceBox');
@@ -11,24 +13,32 @@ function fetchDevices() {
     fetch('/devices/status')
         .then(response => response.json())
         .then(data => {
-            const deviceContainer = document.getElementById('deviceContainer');
-            deviceContainer.innerHTML = '';
-            let hasOnlineDevice = false;
+            let hasOnlineDevice = false;   
             const previousSelectedDevice = selectedDevice;
-            for (const device in data) {
-                if (data[device].status === 'online') {
-                    const deviceBox = document.createElement('div');
-                    deviceBox.className = 'deviceBox';
-                    deviceBox.textContent = device;
-                    deviceBox.onclick = function() {
-                        deselectAllDevices();
-                        selectedDevice = this.textContent;
-                        selectDevice(selectedDevice); 
-                        deviceBox.classList.add('selected');
-                        this.classList.add('selected'); 
-                    };
-                    deviceContainer.appendChild(deviceBox);
+
+            // Ellenőrizzük, hogy változott-e az eszközök állapota
+            if (JSON.stringify(data) !== JSON.stringify(previousDevices)) {
+                const deviceContainer = document.getElementById('deviceContainer');
+                deviceContainer.innerHTML = '';
+                for (const device in data) {
+                    if (data[device].status === 'online') {
+                        const deviceBox = document.createElement('div');
+                        deviceBox.className = 'deviceBox';
+                        deviceBox.textContent = device;
+                        deviceBox.onclick = function() {
+                            deselectAllDevices();
+                            selectedDevice = this.textContent;
+                            this.classList.add('selected');
+                        };
+                        deviceContainer.appendChild(deviceBox);
+
+                        // Ha ez az eszköz volt korábban kijelölve, újra kijelöljük
+                        if (device === selectedDevice) {
+                            deviceBox.classList.add('selected');
+                        }
+                    }
                 }
+                previousDevices = data; // Frissítjük a korábbi eszközök állapotát
             }
             // Itt ellenőrizzük, hogy van-e online eszköz
             const selectedDeviceElement = document.getElementById("selectedDevice");
@@ -36,9 +46,6 @@ function fetchDevices() {
                 selectedDeviceElement.style.display = "block";
             } else {
                 selectedDeviceElement.style.display = "none";
-            }
-            if (device === previousSelectedDevice) {
-                deviceBox.classList.add('selected');
             }
         });
 }
