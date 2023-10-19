@@ -148,7 +148,7 @@ app.post('/api/send-command', (req, res) => {
   const { device, command } = req.body;
   
   // Check if the device is online
-  if (devices[device] === "online") {
+  if (devices[device] && devices[device].status === "online") {
     mqttClient.publish(`InverterCommand/${device}`, command);
     res.json({ success: true, message: 'Command sent successfully!' });
   } else {
