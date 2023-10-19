@@ -161,6 +161,13 @@ app.get('/devices/status', (req, res) => {
   res.json(devices);
 });
 
+app.post('/api/select-device', (req, res) => {
+  const { device } = req.body;
+  console.log(`Device selected: ${device}`);
+  res.json({ success: true, message: 'Device selected successfully!' });
+});
+
+
 // Check if devices are still online
 setInterval(() => {
   const now = Date.now();

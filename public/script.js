@@ -58,5 +58,29 @@ function sendCommand() {
     }
 }
 
+function selectDevice(deviceName) {
+    selectedDevice = deviceName;
+    document.getElementById("selectedDevice").innerText = `Selected Device: ${selectedDevice}`;
+  
+    // Send the selected device to the server for logging
+    fetch('/api/select-device', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ device: selectedDevice })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        console.error(data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error selecting device:', error);
+    });
+  }
+  
+
 // Fetch the devices every 10 seconds
 setInterval(fetchDevices, 10000);
