@@ -14,6 +14,7 @@ function fetchDevices() {
             const deviceContainer = document.getElementById('deviceContainer');
             deviceContainer.innerHTML = '';
             let hasOnlineDevice = false;
+            const previousSelectedDevice = selectedDevice;
             for (const device in data) {
                 if (data[device].status === 'online') {
                     const deviceBox = document.createElement('div');
@@ -34,6 +35,9 @@ function fetchDevices() {
                 selectedDeviceElement.style.display = "block";
             } else {
                 selectedDeviceElement.style.display = "none";
+            }
+            if (device === previousSelectedDevice) {
+                deviceBox.classList.add('selected');
             }
         });
 }
@@ -96,6 +100,6 @@ function selectDevice(deviceName) {
   
 
 // Fetch the devices every 10 seconds
-setInterval(fetchDevices, 10000);
+setInterval(fetchDevices, 100);
 
 

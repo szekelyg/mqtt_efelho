@@ -30,3 +30,7 @@ input[type="text"] {
     border: 1px solid #ccc;
     border-radius: 5px;
 }
+
+#selectedDevice {
+    display: none; /* Elrejtjük a kiválasztott eszköz szövegét */
+}
