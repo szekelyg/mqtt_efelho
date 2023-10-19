@@ -21,7 +21,7 @@ function fetchDevices() {
                     deviceBox.onclick = function() {
                         deselectAllDevices();
                         selectedDevice = this.textContent;
-                        selectDevice(selectedDevice); // Hívd meg a selectDevice függvényt
+                        selectDevice(selectedDevice); 
                         deviceBox.classList.add('selected');
                     };
                     deviceContainer.appendChild(deviceBox);

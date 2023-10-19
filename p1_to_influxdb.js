@@ -150,6 +150,8 @@ app.post('/api/send-command', (req, res) => {
   // Check if the device is online
   if (devices[device] && devices[device].status === "online") {
     mqttClient.publish(`InverterCommand/${device}`, command);
+    console.log("Send command on channel: " + `InverterCommand/${device}` + " COMMAND: " + command);
+
     res.json({ success: true, message: 'Command sent successfully!' });
   } else {
     res.status(404).json({ success: false, message: 'Device not found or offline.' });
