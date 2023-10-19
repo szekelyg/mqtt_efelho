@@ -25,6 +25,7 @@ function fetchDevices() {
                         selectedDevice = this.textContent;
                         selectDevice(selectedDevice); 
                         deviceBox.classList.add('selected');
+                        this.classList.add('selected'); 
                     };
                     deviceContainer.appendChild(deviceBox);
                 }
