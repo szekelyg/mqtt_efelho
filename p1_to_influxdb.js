@@ -82,7 +82,6 @@ mqttClient.on('message', (topic, message) => {
   // Az első elem (pl. "clientID=MKR1010Client-XYZ") a kliens ID lesz
   const clientIDPair = dataPairs.shift();
   const [clientIDKey, clientIDValue] = clientIDPair.split('=');
-  console.log("ClientData " + String(clientIDKey) + ", " + String(clientIDValue));
 
   // A második elem (pl. "electricity") a mérési pont neve lesz
   const measurementName = dataPairs.shift();
@@ -90,15 +89,14 @@ mqttClient.on('message', (topic, message) => {
   // Az epoch idő fogadása
   const epochPair = dataPairs.shift();
   const [epochKey, epochValue] = epochPair.split('=');
-  console.log("EpochData " + String(epochKey) + ", " + String(epochValue));
-  
+
   if (devices[clientIDValue]) {
     devices[clientIDValue].lastSeen = Date.now();
   }
 
   const point = new Point(measurementName).tag('topic', topic).tag(clientIDKey, clientIDValue);
 
-  
+  point.intField(epochKey, parseInt(epochValue));
 
   dataPairs.forEach(pair => {
     const [key, value] = pair.split('=');
@@ -111,10 +109,9 @@ mqttClient.on('message', (topic, message) => {
     } else {
         point.stringField(key, value);
     }
-
   });
 
-  point.intField(epochKey, parseInt(epochValue));
+  
 
   writeApi.writePoint(point);
 
