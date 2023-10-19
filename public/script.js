@@ -85,9 +85,4 @@ function selectDevice(deviceName) {
 // Fetch the devices every 10 seconds
 setInterval(fetchDevices, 10000);
 
-deviceBox.onclick = function() {
-    deselectAllDevices();
-    selectedDevice = this.textContent;
-    selectDevice(selectedDevice); // Hívd meg a selectDevice függvényt
-    deviceBox.classList.add('selected');
-};
+
