@@ -1,45 +1,35 @@
-
-
-
 const express = require('express');
 const fs = require('fs');
 const mqtt = require('mqtt');
 const path = require('path');
+const config = require('./config.json');  // Hozzáadva
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const OFFLINE_TIMEOUT = 300000; // 5 perc
+const { InfluxDB, Point } = require('@influxdata/influxdb-client');
+
+const influxdb_url = config.influxdb.url;  
+const token = config.influxdb.token; 
+const org = config.influxdb.org;  // 
+const bucket = config.influxdb.bucket;  // 
+const client = new InfluxDB({ url: influxdb_url, token: token });
+
+const writeApi = client.getWriteApi(org, bucket);
+const hivemqCert = fs.readFileSync('./hivemq.crt'); 
 
 let devices = {};
-
-
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-
-const OFFLINE_TIMEOUT = 300000; // 5 perc
-
-const { InfluxDB, Point } = require('@influxdata/influxdb-client');
-
-const influxdb_url = 'https://eu-central-1-1.aws.cloud2.influxdata.com';
-const token = '7VfH77yCJenqjk-zOT24Bz-nMFrePCAT6Lez8NNUIhO7DB0HOzsWxgXnvgmELe-4s02NANjprUMqSC_kX0bORA==';
-const org = 'b08ba55f6db726a3';
-const bucket = 'p1_data';
-
-const client = new InfluxDB({ url: influxdb_url, token: token });
-const writeApi = client.getWriteApi(org, bucket);
-
-
-const hivemqCert = fs.readFileSync('./hivemq.crt'); 
-
-const mqttClient = mqtt.connect('mqtts://722577b8ac4a4176ac5460ef90db0940.s2.eu.hivemq.cloud', {
+const mqttClient = mqtt.connect(config.mqtt.server, {  // 
   clientId: "MKR1010Client-" + Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase(),
-  username: "szekelyg",
-  password: "Sevenof9",
+  username: config.mqtt.username,  // 
+  password: config.mqtt.password,  // 
   connectTimeout: 5000,
   ca: hivemqCert,
   rejectUnauthorized: false
 });
-
 
 mqttClient.on('connect', () => {
   console.log('Connected to MQTT broker');
@@ -58,8 +48,6 @@ mqttClient.on('connect', () => {
     }
   });
 });
-
-
 
 mqttClient.on('error', (err) => {
   console.error("MQTT Error:", err);
@@ -138,11 +126,9 @@ setTimeout(() => {
   }
 }, 5000);
 
-
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
-
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
@@ -177,7 +163,6 @@ app.post('/api/select-device', (req, res) => {
   console.log(`Device selected: ${device}`);
   res.json({ success: true, message: 'Device selected successfully!' });
 });
-
 
 // Check if devices are still online
 setInterval(() => {

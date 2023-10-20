@@ -1,4 +1,5 @@
 // public/script.js
+const FETCH_INTERVAL = 10000; // 10 seconds
 let selectedDevice = null;
 let previousDevices = {};
 
@@ -10,7 +11,12 @@ function deselectAllDevices() {
 
 function fetchDevices() {
     fetch('/devices/status')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Server responded with status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             const deviceContainer = document.getElementById('deviceContainer');
             deviceContainer.innerHTML = '';
@@ -28,18 +34,21 @@ function fetchDevices() {
                     deviceBox.onclick = function() {
                         deselectAllDevices();
                         selectedDevice = this.textContent;
-                        this.style.backgroundColor = "lightblue";
                         document.getElementById("selectedDeviceDisplay").innerText = ` ${selectedDevice}`;
                     };
                     deviceContainer.appendChild(deviceBox);
                 }
             }
+        })
+        .catch(error => {
+            console.error('Error fetching devices:', error);
         });
 }
 
 function deselectAllDevices() {
     const deviceBoxes = document.querySelectorAll('.deviceBox');
     deviceBoxes.forEach(box => {
+        box.classList.remove('selected');
         box.style.backgroundColor = "";
     });
 }
@@ -103,6 +112,6 @@ function selectDevice(deviceName) {
   
 
 // Fetch the devices every 10 seconds
-setInterval(fetchDevices, 1000);
+setInterval(fetchDevices, FETCH_INTERVAL);
 
 
