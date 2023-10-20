@@ -76,60 +76,58 @@ mqttClient.on('reconnect', () => {
 mqttClient.on('message', (topic, message) => {
   console.log(`Received message from topic ${topic}: ${message.toString()}`);
 
-  const mqttData = message.toString();
-  const dataPairs = mqttData.split(',');
+  if (topic === "SmartMeter/P1") {
+      // Feldolgozás, ha a témája SmartMeter/P1
+      const mqttData = message.toString();
+      const dataPairs = mqttData.split(',');
 
-  // Az első elem (pl. "clientID=MKR1010Client-XYZ") a kliens ID lesz
-  const clientIDPair = dataPairs.shift();
-  const [clientIDKey, clientIDValue] = clientIDPair.split('=');
+      const clientIDPair = dataPairs.shift();
+      const [clientIDKey, clientIDValue] = clientIDPair.split('=');
 
-  // A második elem (pl. "electricity") a mérési pont neve lesz
-  const measurementName = dataPairs.shift();
+      const measurementName = dataPairs.shift();
 
-  // Az epoch idő fogadása
-  const epochPair = dataPairs.shift();
-  const [epochKey, epochValue] = epochPair.split('=');
+      const epochPair = dataPairs.shift();
+      const [epochKey, epochValue] = epochPair.split('=');
 
-  if (devices[clientIDValue]) {
-    devices[clientIDValue].lastSeen = Date.now();
-  }
+      if (devices[clientIDValue]) {
+          devices[clientIDValue].lastSeen = Date.now();
+      }
 
-  const point = new Point(measurementName).tag('topic', topic).tag(clientIDKey, clientIDValue);
+      const point = new Point(measurementName).tag('topic', topic).tag(clientIDKey, clientIDValue);
+      point.intField(epochKey, parseInt(epochValue));
 
-  point.intField(epochKey, parseInt(epochValue));
+      dataPairs.forEach(pair => {
+          const [key, value] = pair.split('=');
+          if (value.endsWith('i')) {
+              point.intField(key, parseInt(value.slice(0, -1)));
+          } else if (value.includes('.')) {
+              point.floatField(key, parseFloat(value));
+          } else if (value.endsWith('u')) {
+              point.uintField(key, value.slice(0, -1));
+          } else {
+              point.stringField(key, value);
+          }
+      });
 
-  dataPairs.forEach(pair => {
-    const [key, value] = pair.split('=');
-    if (value.endsWith('i')) {
-        point.intField(key, parseInt(value.slice(0, -1)));
-    } else if (value.includes('.')) {
-        point.floatField(key, parseFloat(value));
-    } else if (value.endsWith('u')) {
-        point.uintField(key, value.slice(0, -1));
-    } else {
-        point.stringField(key, value);
-    }
-  });
-  
-  writeApi.writePoint(point);
+      writeApi.writePoint(point);
 
-  writeApi.flush().then(() => {
-    console.log(`Successfully written to InfluxDB: ${message.toString()}`);
-  }).catch(err => {
-    console.error(`Error writing to InfluxDB: ${err}`);
-  });
+      writeApi.flush().then(() => {
+          console.log(`Successfully written to InfluxDB: ${message.toString()}`);
+      }).catch(err => {
+          console.error(`Error writing to InfluxDB: ${err}`);
+      });
 
-  if (topic === "devices/status") {
-    let payload = JSON.parse(message.toString());
-    console.log(payload.status);
-    if (payload.status === "online" || payload.status === "offline") {
-      devices[payload.clientId] = {
-        status: payload.status,
-        lastSeen: Date.now()
-      };
-      console.log(`Device ${payload.clientId} is now ${payload.status}.`);
-    }
-
+  } else if (topic === "devices/status") {
+      // Feldolgozás, ha a témája devices/status
+      let payload = JSON.parse(message.toString());
+      console.log("Status változűás: " + payload.status);
+      if (payload.status === "online" || payload.status === "offline") {
+          devices[payload.clientId] = {
+              status: payload.status,
+              lastSeen: Date.now()
+          };
+          console.log(`Device ${payload.clientId} is now ${payload.status}.`);
+      }
   }
 });
 
