@@ -29,7 +29,7 @@ function fetchDevices() {
                         deselectAllDevices();
                         selectedDevice = this.textContent;
                         this.style.backgroundColor = "lightblue";
-                        document.getElementById("selectedDeviceDisplay").innerText = `Selected Device: ${selectedDevice}`;
+                        document.getElementById("selectedDeviceDisplay").innerText = ` ${selectedDevice}`;
                     };
                     deviceContainer.appendChild(deviceBox);
                 }
