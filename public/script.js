@@ -63,7 +63,7 @@ function sendCommand() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                message.textContent = 'Command sent successfully!';
+                message.textContent = 'Üzenet elküldve!';
             } else {
                 message.textContent = data.message;
             }
@@ -80,7 +80,7 @@ function sendCommand() {
 
 function selectDevice(deviceName) {
     selectedDevice = deviceName;
-    document.getElementById("selectedDevice").innerText = `Selected Device: ${selectedDevice}`;
+    document.getElementById("selectedDevice").innerText = ` ${selectedDevice}`;
   
     // Send the selected device to the server for logging
     fetch('/api/select-device', {
