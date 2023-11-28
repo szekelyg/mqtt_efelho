@@ -97,6 +97,7 @@ mqttClient.on('message', (topic, message) => {
           }
       });
 
+      /* ez írja be influxba
       writeApi.writePoint(point);
 
       writeApi.flush().then(() => {
@@ -104,6 +105,7 @@ mqttClient.on('message', (topic, message) => {
       }).catch(err => {
           console.error(`Error writing to InfluxDB: ${err}`);
       });
+      */
 
   } else if (topic === "devices/status") {
       // Feldolgozás, ha a témája devices/status
