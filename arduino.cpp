@@ -12,6 +12,8 @@
 //const char* ssid = "LANSolo";
 //const char* password = "Sevenof";
 
+// alakulóban van a kód eléggé
+
 const char* mqtt_server = "722577b8ac4a4176ac5460ef90db0940.s2.eu.hivemq.cloud";
 const char* clientId = "MKR1010Client2-xxxx2"; 
 const long interval = 30000; // interval at which to send data (30 seconds)
