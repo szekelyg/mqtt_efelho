@@ -3,29 +3,36 @@ const fs = require('fs');
 const mqtt = require('mqtt');
 const path = require('path');
 const config = require('./config.json');  // Hozzáadva
+const DBClient =  require('pg').Client;
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const DATABASE_URL = process.env.DATABASE_URL;
 const OFFLINE_TIMEOUT = 300000; // 5 perc
 const { InfluxDB, Point } = require('@influxdata/influxdb-client');
 
-const influxdb_url = config.influxdb.url;  
-const token = config.influxdb.token; 
-const org = config.influxdb.org;  // 
-const bucket = config.influxdb.bucket;  // 
+const influxdb_url = config.influxdb.url;
+const token = config.influxdb.token;
+const org = config.influxdb.org;  //
+const bucket = config.influxdb.bucket;  //
 const client = new InfluxDB({ url: influxdb_url, token: token });
 
 const writeApi = client.getWriteApi(org, bucket);
-const hivemqCert = fs.readFileSync('./hivemq.crt'); 
+const hivemqCert = fs.readFileSync('./hivemq.crt');
 
 let devices = {};
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const mqttClient = mqtt.connect(config.mqtt.server, {  // 
+if (!DATABASE_URL) throw new Error("Please supply the DATABASE_URL env var!")
+const databaseClient = new DBClient({
+  connectionString: DATABASE_URL
+});
+
+const mqttClient = mqtt.connect(config.mqtt.server, {  //
   clientId: "MKR1010Client-" + Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase(),
-  username: config.mqtt.username,  // 
-  password: config.mqtt.password,  // 
+  username: config.mqtt.username,  //
+  password: config.mqtt.password,  //
   connectTimeout: 5000,
   ca: hivemqCert,
   rejectUnauthorized: false
@@ -110,12 +117,19 @@ mqttClient.on('message', (topic, message) => {
   } else if (topic === "devices/status") {
       // Feldolgozás, ha a témája devices/status
       let payload = JSON.parse(message.toString());
-      console.log("Status változűás: " + payload.status);
+      console.log("Status változás: " + payload.status);
       if (payload.status === "online" || payload.status === "offline") {
           devices[payload.clientId] = {
               status: payload.status,
               lastSeen: Date.now()
           };
+          databaseClient.connect()
+            .then((client) => {
+              const currentDate = (new Date()).toISOString().split("T").join(" ").split("Z")[0]
+              client.query('INSERT INTO devices (serial_number, status, inserted_at, updated_at) VALUES($1, $2, $3, $3) ON CONFLICT (serial_number) DO UPDATE SET status = $2, updated_at = $3;', [payload.clientId, payload.status, currentDate]);
+              console.log(`Device ${payload.clientId} saved into the database successfully`);
+            })
+            .catch(console.error)
           console.log(`Device ${payload.clientId} is now ${payload.status}.`);
       }
   }
@@ -139,7 +153,7 @@ app.listen(PORT, () => {
 // Send a command to a specific device
 app.post('/api/send-command', (req, res) => {
   const { device, command } = req.body;
-  
+
   // Az üzenet formátuma: { "clientID": "MKR1010Client-xxx1", "command": "TURN_ON" }
   const messagePayload = JSON.stringify({ clientID: device, command: command });
 

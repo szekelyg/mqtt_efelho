@@ -7,9 +7,9 @@
     "start": "node p1_to_influxdb.js"
   },
   "dependencies": {
-    "mqtt": "^4.2.8",
     "@influxdata/influxdb-client": "^1.18.0",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "mqtt": "^4.2.8",
+    "pg": "^8.11.3"
   }
 }
-
