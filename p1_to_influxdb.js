@@ -104,6 +104,14 @@ mqttClient.on('message', (topic, message) => {
           }
       });
 
+      databaseClient.connect()
+        .then((client) => {
+          const currentDate = (new Date()).toISOString().split("T").join(" ").split("Z")[0]
+          client.query('INSERT INTO devices (serial_number, status, inserted_at, updated_at) VALUES($1, $2, $3, $3) ON CONFLICT (serial_number) DO UPDATE SET status = $2, updated_at = $3;', [clientIDValue, "online", currentDate]);
+          console.log(`Device ${clientIDValue} saved into the database successfully`);
+        })
+        .catch(console.error)
+
       /* ez írja be influxba
       writeApi.writePoint(point);
 
