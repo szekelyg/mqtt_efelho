@@ -28,6 +28,7 @@ if (!DATABASE_URL) throw new Error("Please supply the DATABASE_URL env var!")
 const databaseClient = new DBClient({
   connectionString: DATABASE_URL
 });
+const connectedClient = databaseClient.connect();
 
 const mqttClient = mqtt.connect(config.mqtt.server, {  //
   clientId: "MKR1010Client-" + Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase(),
@@ -104,8 +105,8 @@ mqttClient.on('message', (topic, message) => {
           }
       });
 
-      databaseClient.connect()
-        .then((client) => {
+    connectedClient
+      .then((client) => {
           const currentDate = (new Date()).toISOString().split("T").join(" ").split("Z")[0]
           client.query('INSERT INTO devices (serial_number, status, inserted_at, updated_at) VALUES($1, $2, $3, $3) ON CONFLICT (serial_number) DO UPDATE SET status = $2, updated_at = $3;', [clientIDValue, "online", currentDate]);
           console.log(`Device ${clientIDValue} saved into the database successfully`);
@@ -131,7 +132,7 @@ mqttClient.on('message', (topic, message) => {
               status: payload.status,
               lastSeen: Date.now()
           };
-          databaseClient.connect()
+          connectedClient
             .then((client) => {
               const currentDate = (new Date()).toISOString().split("T").join(" ").split("Z")[0]
               client.query('INSERT INTO devices (serial_number, status, inserted_at, updated_at) VALUES($1, $2, $3, $3) ON CONFLICT (serial_number) DO UPDATE SET status = $2, updated_at = $3;', [payload.clientId, payload.status, currentDate]);
