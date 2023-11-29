@@ -28,7 +28,6 @@ if (!DATABASE_URL) throw new Error("Please supply the DATABASE_URL env var!")
 const databaseClient = new DBClient({
   connectionString: DATABASE_URL
 });
-const connectedClient = databaseClient.connect();
 
 const mqttClient = mqtt.connect(config.mqtt.server, {  //
   clientId: "MKR1010Client-" + Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase(),
@@ -69,81 +68,78 @@ mqttClient.on('reconnect', () => {
   console.warn("Reconnecting to MQTT broker...");
 });
 
-mqttClient.on('message', (topic, message) => {
-  console.log(`Received message from topic ${topic}: ${message.toString()}`);
+databaseClient.connect()
+  .then(() => {
 
-  if (topic === "SmartMeter/P1") {
-      // Feldolgozás, ha a témája SmartMeter/P1
-      const mqttData = message.toString();
-      const dataPairs = mqttData.split(',');
+    mqttClient.on('message', (topic, message) => {
+      console.log(`Received message from topic ${topic}: ${message.toString()}`);
 
-      const clientIDPair = dataPairs.shift();
-      const [clientIDKey, clientIDValue] = clientIDPair.split('=');
+      if (topic === "SmartMeter/P1") {
+        // Feldolgozás, ha a témája SmartMeter/P1
+        const mqttData = message.toString();
+        const dataPairs = mqttData.split(',');
 
-      const measurementName = dataPairs.shift();
+        const clientIDPair = dataPairs.shift();
+        const [clientIDKey, clientIDValue] = clientIDPair.split('=');
 
-      const epochPair = dataPairs.shift();
-      const [epochKey, epochValue] = epochPair.split('=');
+        const measurementName = dataPairs.shift();
 
-      if (devices[clientIDValue]) {
+        const epochPair = dataPairs.shift();
+        const [epochKey, epochValue] = epochPair.split('=');
+
+        if (devices[clientIDValue]) {
           devices[clientIDValue].lastSeen = Date.now();
-      }
+        }
 
-      const point = new Point(measurementName).tag('topic', topic).tag(clientIDKey, clientIDValue);
-      point.intField(epochKey, parseInt(epochValue));
+        const point = new Point(measurementName).tag('topic', topic).tag(clientIDKey, clientIDValue);
+        point.intField(epochKey, parseInt(epochValue));
 
-      dataPairs.forEach(pair => {
+        dataPairs.forEach(pair => {
           const [key, value] = pair.split('=');
           if (value.endsWith('i')) {
-              point.intField(key, parseInt(value.slice(0, -1)));
+            point.intField(key, parseInt(value.slice(0, -1)));
           } else if (value.includes('.')) {
-              point.floatField(key, parseFloat(value));
+            point.floatField(key, parseFloat(value));
           } else if (value.endsWith('u')) {
-              point.uintField(key, value.slice(0, -1));
+            point.uintField(key, value.slice(0, -1));
           } else {
-              point.stringField(key, value);
+            point.stringField(key, value);
           }
-      });
+        });
 
-    connectedClient
-      .then((client) => {
-          const currentDate = (new Date()).toISOString().split("T").join(" ").split("Z")[0]
-          client.query('INSERT INTO devices (serial_number, status, inserted_at, updated_at) VALUES($1, $2, $3, $3) ON CONFLICT (serial_number) DO UPDATE SET status = $2, updated_at = $3;', [clientIDValue, "online", currentDate]);
-          console.log(`Device ${clientIDValue} saved into the database successfully`);
-        })
-        .catch(console.error)
+        const currentDate = (new Date()).toISOString().split("T").join(" ").split("Z")[0]
+        databaseClient.query('INSERT INTO devices (serial_number, status, inserted_at, updated_at) VALUES($1, $2, $3, $3) ON CONFLICT (serial_number) DO UPDATE SET status = $2, updated_at = $3;', [clientIDValue, "online", currentDate]).catch(console.error);
+        console.log(`Device ${clientIDValue} saved into the database successfully`);
 
-      /* ez írja be influxba
-      writeApi.writePoint(point);
+        /* ez írja be influxba
+        writeApi.writePoint(point);
 
-      writeApi.flush().then(() => {
-          console.log(`Successfully written to InfluxDB: ${message.toString()}`);
-      }).catch(err => {
-          console.error(`Error writing to InfluxDB: ${err}`);
-      });
-      */
+        writeApi.flush().then(() => {
+            console.log(`Successfully written to InfluxDB: ${message.toString()}`);
+        }).catch(err => {
+            console.error(`Error writing to InfluxDB: ${err}`);
+        });
+        */
 
-  } else if (topic === "devices/status") {
-      // Feldolgozás, ha a témája devices/status
-      let payload = JSON.parse(message.toString());
-      console.log("Status változás: " + payload.status);
-      if (payload.status === "online" || payload.status === "offline") {
+      } else if (topic === "devices/status") {
+        // Feldolgozás, ha a témája devices/status
+        let payload = JSON.parse(message.toString());
+        console.log("Status változás: " + payload.status);
+        if (payload.status === "online" || payload.status === "offline") {
           devices[payload.clientId] = {
-              status: payload.status,
-              lastSeen: Date.now()
+            status: payload.status,
+            lastSeen: Date.now()
           };
-          connectedClient
-            .then((client) => {
-              const currentDate = (new Date()).toISOString().split("T").join(" ").split("Z")[0]
-              client.query('INSERT INTO devices (serial_number, status, inserted_at, updated_at) VALUES($1, $2, $3, $3) ON CONFLICT (serial_number) DO UPDATE SET status = $2, updated_at = $3;', [payload.clientId, payload.status, currentDate]);
-              console.log(`Device ${payload.clientId} saved into the database successfully`);
-            })
-            .catch(console.error)
+          const currentDate = (new Date()).toISOString().split("T").join(" ").split("Z")[0]
+          databaseClient.query('INSERT INTO devices (serial_number, status, inserted_at, updated_at) VALUES($1, $2, $3, $3) ON CONFLICT (serial_number) DO UPDATE SET status = $2, updated_at = $3;', [payload.clientId, payload.status, currentDate]).catch(console.error);
+          console.log(`Device ${payload.clientId} saved into the database successfully`);
           console.log(`Device ${payload.clientId} is now ${payload.status}.`);
+        }
       }
-  }
-});
+    });
 
+  })
+  .catch(console.error);
 setTimeout(() => {
   if (!mqttClient.connected) {
     console.error("Failed to connect to MQTT broker after 5 seconds");
