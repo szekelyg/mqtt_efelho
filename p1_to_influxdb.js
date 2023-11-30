@@ -109,10 +109,11 @@ databaseClient.connect()
 
         const currentImport = parseFloat(message.toString().match(/current_import=(.*)i,/)[1]) * 100;
         const currentDate = (new Date()).toISOString().split("T").join(" ").split("Z")[0];
+        const currentSeconds = Date.now()/1000;
         databaseClient.query('INSERT INTO devices (serial_number, status, inserted_at, updated_at) VALUES($1, $2, $3, $3) ON CONFLICT (serial_number) DO UPDATE SET status = $2, updated_at = $3 RETURNING id;', [clientIDValue, "online", currentDate])
           .then((result) => {
             const deviceId = result.rows[0].id;
-            databaseClient.query('INSERT INTO raw_data_buckets (timestamp, data_point, device_id, inserted_at, updated_at) VALUES($1, $2, $3, $4, $4)', [Date.now(), currentImport, deviceId, currentDate]).catch(console.error);
+            databaseClient.query('INSERT INTO raw_data_buckets (timestamp, data_point, device_id, inserted_at, updated_at) VALUES($1, $2, $3, $4, $4)', [currentSeconds, currentImport, deviceId, currentDate]).catch(console.error);
           })
           .catch(console.error);
         console.log(`Device ${clientIDValue} saved into the database successfully`);
