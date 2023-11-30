@@ -107,8 +107,14 @@ databaseClient.connect()
           }
         });
 
-        const currentDate = (new Date()).toISOString().split("T").join(" ").split("Z")[0]
-        databaseClient.query('INSERT INTO devices (serial_number, status, inserted_at, updated_at) VALUES($1, $2, $3, $3) ON CONFLICT (serial_number) DO UPDATE SET status = $2, updated_at = $3;', [clientIDValue, "online", currentDate]).catch(console.error);
+        const currentImport = parseFloat(message.toString().match(/current_import=(.*)i,/)[1]) * 100;
+        const currentDate = (new Date()).toISOString().split("T").join(" ").split("Z")[0];
+        databaseClient.query('INSERT INTO devices (serial_number, status, inserted_at, updated_at) VALUES($1, $2, $3, $3) ON CONFLICT (serial_number) DO UPDATE SET status = $2, updated_at = $3 RETURNING id;', [clientIDValue, "online", currentDate])
+          .then((result) => {
+            const deviceId = result.rows[0].id;
+            databaseClient.query('INSERT INTO raw_data_buckets (timestamp, data_point, device_id, inserted_at, updated_at) VALUES($1, $2, $3, $4, $4)', [Date.now(), currentImport, deviceId, currentDate]).catch(console.error);
+          })
+          .catch(console.error);
         console.log(`Device ${clientIDValue} saved into the database successfully`);
 
         /* ez írja be influxba
@@ -130,7 +136,7 @@ databaseClient.connect()
             status: payload.status,
             lastSeen: Date.now()
           };
-          const currentDate = (new Date()).toISOString().split("T").join(" ").split("Z")[0]
+          const currentDate = (new Date()).toISOString().split("T").join(" ").split("Z")[0];
           databaseClient.query('INSERT INTO devices (serial_number, status, inserted_at, updated_at) VALUES($1, $2, $3, $3) ON CONFLICT (serial_number) DO UPDATE SET status = $2, updated_at = $3;', [payload.clientId, payload.status, currentDate]).catch(console.error);
           console.log(`Device ${payload.clientId} saved into the database successfully`);
           console.log(`Device ${payload.clientId} is now ${payload.status}.`);
