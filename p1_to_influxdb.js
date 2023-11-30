@@ -109,7 +109,7 @@ databaseClient.connect()
 
         const currentImport = parseFloat(message.toString().match(/current_import=(.*)i,/)[1]) * 100;
         const currentDate = (new Date()).toISOString().split("T").join(" ").split("Z")[0];
-        const currentSeconds = Date.now()/1000;
+        const currentSeconds = Math.trunc(Date.now()/1000);
         databaseClient.query('INSERT INTO devices (serial_number, status, inserted_at, updated_at) VALUES($1, $2, $3, $3) ON CONFLICT (serial_number) DO UPDATE SET status = $2, updated_at = $3 RETURNING id;', [clientIDValue, "online", currentDate])
           .then((result) => {
             const deviceId = result.rows[0].id;
