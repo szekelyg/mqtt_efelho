@@ -40,14 +40,14 @@ const mqttClient = mqtt.connect(config.mqtt.server, {  //
 
 mqttClient.on('connect', () => {
   console.log('Connected to MQTT broker');
-  mqttClient.subscribe('SmartMeter/P1', { qos: 2 }, (err) => {
+  mqttClient.subscribe('SmartMeter/P1', (err) => {
     if (!err) {
       console.log("Subscribed to SmartMeter/P1 topic");
     } else {
       console.error("Failed to subscribe:", err);
     }
   });
-  mqttClient.subscribe('devices/status', { qos: 2 }, (err) => {
+  mqttClient.subscribe('devices/status', (err) => {
     if (!err) {
       console.log("Subscribed to devices/status topic");
     } else {
@@ -172,7 +172,7 @@ app.post('/api/send-command', (req, res) => {
   // Check if the device is online
   if (devices[device] && devices[device].status === "online") {
     // Küldje el az üzenetet az INVERTERCOMMAND csatornára
-    mqttClient.publish(`InverterCommand`, messagePayload);
+    mqttClient.publish(`InverterCommand`, messagePayload, { qos: 2 });
     console.log("Send command on channel: InverterCommand, COMMAND: " + messagePayload);
 
     res.json({ success: true, message: 'Command sent successfully!' });
