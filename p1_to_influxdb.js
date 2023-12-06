@@ -40,14 +40,14 @@ const mqttClient = mqtt.connect(config.mqtt.server, {  //
 
 mqttClient.on('connect', () => {
   console.log('Connected to MQTT broker');
-  mqttClient.subscribe('SmartMeter/P1', (err) => {
+  mqttClient.subscribe('SmartMeter/P1', { qos: 2 }, (err) => {
     if (!err) {
       console.log("Subscribed to SmartMeter/P1 topic");
     } else {
       console.error("Failed to subscribe:", err);
     }
   });
-  mqttClient.subscribe('devices/status', (err) => {
+  mqttClient.subscribe('devices/status', { qos: 2 }, (err) => {
     if (!err) {
       console.log("Subscribed to devices/status topic");
     } else {
