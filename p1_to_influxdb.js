@@ -172,7 +172,7 @@ app.post('/api/send-command', (req, res) => {
   // Check if the device is online
   if (devices[device] && devices[device].status === "online") {
     // Küldje el az üzenetet az INVERTERCOMMAND csatornára
-    mqttClient.publish(`InverterCommand`, messagePayload);
+    mqttClient.publish(`InverterCommand`, messagePayload, { qos: 2 });
     console.log("Send command on channel: InverterCommand, COMMAND: " + messagePayload);
 
     res.json({ success: true, message: 'Command sent successfully!' });
