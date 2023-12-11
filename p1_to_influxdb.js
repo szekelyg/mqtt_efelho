@@ -78,7 +78,7 @@ databaseClient.connect()
         // Feldolgozás, ha a témája SmartMeter/P1
         const mqttData = message.toString();
         const dataPairs = mqttData.split(',');
-
+        console.log("Message arrived: " + message);
         const clientIDPair = dataPairs.shift();
         const [clientIDKey, clientIDValue] = clientIDPair.split('=');
 
