@@ -12,9 +12,7 @@
 //const char* ssid = "LANSolo";
 //const char* password = "Sevenof";
 
-// alakulóban van a kód eléggé
-
-const char* mqtt_server = "722577b8ac4a4176ac5460ef90db0940.s2.eu.hivemq.cloud";
+const char* mqtt_server = "1d4a6d32c1c3472e8617499d19071e10.s2.eu.hivemq.cloud";
 const char* clientId = "MKR1010Client2-xxxx2"; 
 const long interval = 30000; // interval at which to send data (30 seconds)
 const char* AP_SSID = "MyArduinoAP";
@@ -66,8 +64,130 @@ void loop() {
     reconnect();
   }
   client.loop();
-  sendToInfluxDB();
+  //sendToInfluxDB();
+  // Adatok küldése ha elérhető a kapcsolat
+  if (WiFi.status() == WL_CONNECTED) {
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= interval) {
+      previousMillis = currentMillis;
+      sendDSMRData();
+    }
+  }
 }
+// OBIS kódok angol megnevezései
+const char* getEnglishNameForOBIS(const char* obisCode) {
+  if (strcmp(obisCode, "1-0:32.7.0.255") == 0) return "Instantaneous Voltage L1";
+  if (strcmp(obisCode, "1-0:52.7.0.255") == 0) return "Instantaneous Voltage L2";
+  if (strcmp(obisCode, "1-0:72.7.0.255") == 0) return "Instantaneous Voltage L3";
+  if (strcmp(obisCode, "1-0:31.7.0.255") == 0) return "Instantaneous Current L1";
+  if (strcmp(obisCode, "1-0:51.7.0.255") == 0) return "Instantaneous Current L2";
+  if (strcmp(obisCode, "1-0:71.7.0.255") == 0) return "Instantaneous Current L3";
+  if (strcmp(obisCode, "1-0:13.7.0.255") == 0) return "Instantaneous Power Factor";
+  if (strcmp(obisCode, "1-0:33.7.0.255") == 0) return "Instantaneous Power Factor L1";
+  if (strcmp(obisCode, "1-0:53.7.0.255") == 0) return "Instantaneous Power Factor L2";
+  if (strcmp(obisCode, "1-0:73.7.0.255") == 0) return "Instantaneous Power Factor L3";
+  if (strcmp(obisCode, "1-0:14.7.0.255") == 0) return "Frequency";
+  if (strcmp(obisCode, "1-0:1.7.0.255") == 0) return "Instantaneous Import Power";
+  if (strcmp(obisCode, "1-0:2.7.0.255") == 0) return "Instantaneous Export Power";
+  return "Unknown";
+}
+
+
+void processLine(char* line, DynamicJsonDocument &doc) {
+    if (strlen(line) > 0) {
+        char* key = strtok(line, "(");
+        char* rawValue = strtok(NULL, "\n");
+
+        if (rawValue != NULL) {
+            char* value = extractValue(rawValue);
+            float floatValue = atof(value);
+            int intValue = static_cast<int>(floatValue * 1000);
+
+            String keyString = String(key);
+            const char* englishName = getEnglishNameForOBIS(keyString.c_str());
+
+            JsonObject obj = doc.createNestedObject();
+            obj["NAME"] = englishName;
+            obj["KEY"] = key;
+            obj["VALUE"] = intValue;
+
+            Serial.print("NAME: ");
+            Serial.print(englishName);
+            Serial.print(", KEY: ");
+            Serial.print(key);
+            Serial.print(", VALUE: ");
+            Serial.println(intValue);
+        }
+    }
+}
+
+
+String generateSimulatedDSMRData() {
+  String data = "/SX631-METER\n";
+  
+  // Pillanatnyi feszültségek L1, L2, L3 (pl. 230.15 V)
+  data += "1-0:32.7.0.255(" + String(random(220, 240)) + "." + String(random(10, 99)) + "*V)\n";  // L1
+  data += "1-0:52.7.0.255(" + String(random(220, 240)) + "." + String(random(10, 99)) + "*V)\n";  // L2
+  data += "1-0:72.7.0.255(" + String(random(220, 240)) + "." + String(random(10, 99)) + "*V)\n";  // L3
+
+  // Pillanatnyi áramok L1, L2, L3 (pl. 005.25 A)
+  data += "1-0:31.7.0.255(" + String(random(1, 9)) + "." + String(random(10, 99)) + "*A)\n";  // L1
+  data += "1-0:51.7.0.255(" + String(random(1, 9)) + "." + String(random(10, 99)) + "*A)\n";  // L2
+  data += "1-0:71.7.0.255(" + String(random(1, 9)) + "." + String(random(10, 99)) + "*A)\n";  // L3
+
+  // Pillanatnyi teljesítménytényezők (pl. 0.980)
+  data += "1-0:13.7.0.255(0." + String(random(980, 999)) + ")\n";  // Általános
+  data += "1-0:33.7.0.255(0." + String(random(980, 999)) + ")\n";  // L1
+  data += "1-0:53.7.0.255(0." + String(random(980, 999)) + ")\n";  // L2
+  data += "1-0:73.7.0.255(0." + String(random(980, 999)) + ")\n";  // L3
+
+  // Frekvencia (pl. 50.00 Hz)
+  data += "1-0:14.7.0.255(50.00*Hz)\n";
+
+  // Pillanatnyi import és export teljesítmény (pl. 1.234 kW)
+  data += "1-0:1.7.0.255(" + String(random(0, 9)) + "." + String(random(100, 999)) + "*kW)\n";  // Import
+  data += "1-0:2.7.0.255(" + String(random(0, 9)) + "." + String(random(100, 999)) + "*kW)\n";  // Export
+
+  data += "!24AC\n";  // Záró jel
+  Serial.println(data);
+  return data;
+}
+
+
+void sendDSMRData() {
+  String simulatedDSMRData = generateSimulatedDSMRData();
+  DynamicJsonDocument doc(2048);
+
+  int start = 0, end;
+  while ((end = simulatedDSMRData.indexOf('\n', start)) != -1) {
+    String line = simulatedDSMRData.substring(start, end);
+    char* cLine = const_cast<char*>(line.c_str());
+    processLine(cLine, doc);
+
+    start = end + 1;
+  }
+
+  String jsonString;
+  serializeJson(doc, jsonString);
+
+  Serial.println("Küldött adatok:");
+  Serial.println(jsonString);
+
+  client.publish("SmartMeter/P1", jsonString.c_str());
+  //client.publish("SmartMeter/P1", jsonString.c_str());
+}
+
+char* extractValue(char* line) {
+    char* end = strchr(line, '*');  // Keresse meg a '*' karaktert
+    if (end == NULL) {
+        end = strchr(line, ')');  // Ha nincs '*', keresse a ')' karaktert
+    }
+    if (end != NULL) {
+        *end = '\0';  // Vágja le a stringet az elválasztó karakter előtt
+    }
+    return line;  // Visszaadja az értéket
+}
+
 
 void setup_wifi() {
   Serial.print("Connecting to ");
@@ -131,7 +251,10 @@ void reconnect() {
     while (!client.connected()) {
       Serial.print("Attempting MQTT connection...");
       String topicID = "InverterCommand/" + String(clientId);
-      if (client.connect(String(clientId).c_str(), "szekelyg", "Sevenof9")) {
+      String willMsg = "{ \"clientId\": \"" + String(clientId) + "\", \"status\": \"offline\" }";
+      const char* willTopic = "devices/status";
+      const char* willMessage = willMsg.c_str();
+      if (client.connect(String(clientId).c_str(), "szekelyg", "Sevenof9", willTopic, 1, true, willMessage)) {
         Serial.println("connected");
         client.subscribe("InverterCommand");
         client.subscribe(topicID.c_str());
@@ -146,7 +269,9 @@ void reconnect() {
       }
     }
   } else {
+    onDisconnect();
     Serial.println("No internet connection. Skipping MQTT connection attempt.");
+    delay(5000);
   }
 }
 
@@ -264,4 +389,8 @@ void handleCaptivePortal() {
     }
   }
 }
+
+
+
+
 
